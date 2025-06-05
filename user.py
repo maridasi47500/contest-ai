@@ -33,19 +33,20 @@ class User(Model):
         self.con.commit()
         return None
     def getbyemailpwsecurity(self,email,pw):
-        self.cur.execute("select * from user where email = ? and password = ? ",(email,pw,))
-        myrow=dict(self.cur.fetchone())
-        print(myrow["id"], "row id")
-        row={}
-        ai=Ai().findbyuserid(self.Program.get_session()["user_id"])
+
         try:
+          self.cur.execute("select * from user where email = ? and password = ? ",(email,pw,))
+          myrow=dict(self.cur.fetchone())
+          print(myrow["id"], "row id")
+          row={}
+          ai=Ai().findbyuserid(myrow["id"])
           row["notice"]="vous êtes connecté"
           row["name"]=myrow["nomcomplet"]
           row["user_id"]=myrow["id"]
           row["ai_id"]=ai["id"]
           row["email"]=myrow["email"]
         except Exception as e:
-          row={"notice":"votre connexion n'a pas fonctionné","name":"","email":""}
+          row={"notice":str(e)+"votre connexion n'a pas fonctionné","name":"","email":""}
         return row
     def getbyid(self,myid):
         self.cur.execute("select * from user where id = ?",(myid,))

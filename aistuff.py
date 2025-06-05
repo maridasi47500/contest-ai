@@ -3,6 +3,7 @@ import sqlite3
 import sys
 import re
 from model import Model
+
 class Aistuff(Model):
     def __init__(self):
         self.con=sqlite3.connect(self.mydb)
@@ -21,6 +22,12 @@ class Aistuff(Model):
 
         row=self.cur.fetchall()
         return row
+    def deletebyuserid(self,myid,userid):
+
+        self.cur.execute("delete from aistuff where stuff_id = ? and ai_id = ?",(myid,userid))
+        job=self.cur.fetchall()
+        self.con.commit()
+        return None
     def deletebyid(self,myid):
 
         self.cur.execute("delete from aistuff where id = ?",(myid,))

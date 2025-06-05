@@ -3,6 +3,7 @@ import sqlite3
 import sys
 import re
 from model import Model
+from stuff import Stuff
 from aistuff import Aistuff
 from chercherimage import Chercherimage
 from post import Post
@@ -29,6 +30,7 @@ class Ai(Model):
     Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP                );""")
         self.con.commit()
         self.Aistuff=Aistuff()
+        self.Stuff=Stuff()
         #self.con.close()
     def getall(self):
         self.cur.execute("select * from ai")
@@ -92,7 +94,9 @@ class Ai(Model):
         mystuff_ids=params["description"].split(",")
         random.shuffle(mystuff_ids)
         user_id=params["user_id"]
-        allstuffs=self.Aistuff.getbyuserid(user_id)
+        allstuffs=self.Stuff.getall()
+        allmystuffs=self.Aistuff.getbyuserid(aiid)
+        allmystuffsarray=self.Aistuff.getidbyuserid(aiid)
         random.shuffle(allstuffs)
         hey=None
         self.cur.execute("select user.id as userid,country.* from user left join country on country.id = user.country_id where user.id = :user_id",(params["user_id"],))
@@ -106,39 +110,43 @@ class Ai(Model):
         z=None
         y=None
         for z in allstuffs:
-            print("STUUUFFFFFFFF",z)
+            print("STUUUFFFFFFFF",z,z["id"],mystuff_ids)
+            someid=str(z["id"])
 
-            if z["stuff_id"] not in mystuff_ids:
-                self.Aistuff.deletebyid(z["id"])
-            else:
-                self.cur.execute("select * from stuff where id = ?",(z["stuff_id"],))
-                y=self.cur.fetchone()
-                mypic=("woman" if myai["gender"] == "f" else "man")+" "+mycountry+" "+y["name"]
+            if someid not in mystuff_ids and someid in allmystuffsarray:
+                try:
+                    self.Aistuff.deletebyuserid(someid,aiid)
+                    allmystuffs=self.Aistuff.getbyuserid(user_id)
+                except:
+                    print("hey")
+            elif someid in mystuff_ids:
+                self.Aistuff.create({"ai_id":aiid,"stuff_id":someid})
+                mypic=("woman" if myai["gender"] == "f" else "man")+" "+mycountry+" "+z["name"]
                 hey=Chercherimage(mypic).search()
 
                 opener=urllib.request.build_opener()
                 opener.addheaders=[('User-Agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19582')]
                 urllib.request.install_opener(opener)
-                somename= f'./uploads/'+str(myai["gender"])+'_'+y["name"].replace(".","").replace(" ","_")+'_pic.jpg'
+                somename= f'./uploads/'+str(myai["gender"])+'_'+z["name"].replace(".","").replace(" ","_")+'_pic.jpg'
                 mstring=Chaine().fichier(somename)
                 urllib.request.urlretrieve(hey[0]["src"], './uploads/'+mstring)
                 post=self.dbPost.create({"pic":mstring,"description":mypic,"ai_id":aiid})
-        for mystuff_id in mystuff_ids:
-            print("STUUUFFFFFFFF => ",mystuff_id)
-            if mystuff_id not in allstuffs:
-                self.Aistuff.create({"ai_id":aiid,"stuff_id":mystuff_id})
-                self.cur.execute("select * from stuff where id = ?",(mystuff_id,))
-                y=self.cur.fetchone()
-                mypic=("woman" if myai["gender"] == "f" else "man")+" "+mycountry+" "+y["name"]
-                hey=Chercherimage(mypic).search()
+        #for mystuff_id in mystuff_ids:
+        #    print("STUUUFFFFFFFF => ",mystuff_id)
+        #    if mystuff_id not in allstuffs:
 
-                opener=urllib.request.build_opener()
-                opener.addheaders=[('User-Agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19582')]
-                urllib.request.install_opener(opener)
-                somename= f'./uploads/'+str(myai["gender"])+'_'+y["name"].replace(".","").replace(" ","_")+'_pic.jpg'
-                mstring=Chaine().fichier(somename)
-                urllib.request.urlretrieve(hey[0]["src"], './uploads/'+mstring)
-                post=self.dbPost.create({"pic":mstring,"description":mypic,"ai_id":aiid})
+        #        self.cur.execute("select * from stuff where id = ?",(mystuff_id,))
+        #        y=self.cur.fetchone()
+        #        mypic=("woman" if myai["gender"] == "f" else "man")+" "+mycountry+" "+y["name"]
+        #        hey=Chercherimage(mypic).search()
+
+        #        opener=urllib.request.build_opener()
+        #        opener.addheaders=[('User-Agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19582')]
+        #        urllib.request.install_opener(opener)
+        #        somename= f'./uploads/'+str(myai["gender"])+'_'+y["name"].replace(".","").replace(" ","_")+'_pic.jpg'
+        #        mstring=Chaine().fichier(somename)
+        #        urllib.request.urlretrieve(hey[0]["src"], './uploads/'+mstring)
+        #        post=self.dbPost.create({"pic":mstring,"description":mypic,"ai_id":aiid})
         for x in params:
             if 'confirmation' in x:
                 continue
