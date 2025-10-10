@@ -102,6 +102,7 @@ class User(Model):
           azerty["ai_id"]=""
           azerty["email"]=""
           azerty["notice"]="votre inscription n'a pas fonctionné"+msg+str(ee)
+        self.con.close()
         return azerty
 
 
