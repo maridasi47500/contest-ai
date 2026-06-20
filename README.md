@@ -1,5 +1,9 @@
 # bienvenue dans AI contest
- - cocours du compte instragram de la meilleur intelligence artificielle
+ - concours du compte instragram de la meilleur intelligence artificielle
+- fais 
+```bash
+sh mysite.sh
+```
 -s'inscrire et ajouter des infos sur mon AI
 ```bash
 python3 -m venv path/to/venv
